@@ -166,16 +166,7 @@ const Billing = ({ invoices, products }) => {
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
-  if (!session?.user?.email) {
-    return {
-      redirect: {
-        destination: '/auth/login',
-        permanent: false,
-      },
-    };
-  }
-
-  const customerPayment = await getPayment(session.user.email);
+  const customerPayment = await getPayment(session.user?.email);
   const [invoices, products] = await Promise.all([
     getInvoices(customerPayment?.paymentId),
     getProducts(),

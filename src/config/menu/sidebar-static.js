@@ -10,10 +10,6 @@ const sidebarMenu = () => [
         path: `/account`,
       },
       {
-        name: 'App Conducente',
-        path: `/driver/map`,
-      },
-      {
         name: 'common.label.billing',
         path: `/account/billing`,
       },
