@@ -1,21 +1,51 @@
-import { useState } from 'react';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import Button from '@/components/Button/index';
 import Card from '@/components/Card/index';
 import { useDomain } from '@/hooks/data';
 
-const DomainCard = ({ apex, cname, domain, isLoading, refresh, remove }) => {
-  const { name, subdomain, value, verified } = domain || {};
+export type DomainInfo = {
+  name: string;
+  subdomain: string | null;
+  value: string | null;
+  verified: boolean | null;
+};
+
+type DomainCardProps = {
+  apex?: string;
+  cname?: string;
+  domain?: DomainInfo;
+  isLoading?: boolean;
+  refresh?: (name: string, isVerified: boolean | null) => boolean | void;
+  remove?: (name: string) => void;
+};
+
+const DomainCard = ({
+  apex = '',
+  cname = '',
+  domain,
+  isLoading = true,
+  refresh = () => {},
+  remove = () => {},
+}: DomainCardProps) => {
+  const {
+    name = '',
+    subdomain,
+    value,
+    verified,
+  } = domain ?? ({} as DomainInfo);
   const { data, isLoading: isChecking } = useDomain(name);
-  const [display, setDisplay] = useState(verified ? 'cname' : 'txt');
+  const [display, setDisplay] = useState<'apex' | 'cname' | 'txt'>(
+    verified ? 'cname' : 'txt'
+  );
 
-  const handleRefresh = (name, isVerified) => {
-    const verified = refresh(name, isVerified);
+  const handleRefresh = (n: string, isVerified: boolean | null) => {
+    const result = refresh(n, isVerified);
 
-    if (verified) {
+    if (result) {
       setDisplay('cname');
     }
   };
@@ -31,9 +61,7 @@ const DomainCard = ({ apex, cname, domain, isLoading, refresh, remove }) => {
   };
 
   const showApex = () => setDisplay('apex');
-
   const showCName = () => setDisplay('cname');
-
   const showTxt = () => setDisplay('txt');
 
   return (
@@ -178,16 +206,6 @@ const DomainCard = ({ apex, cname, domain, isLoading, refresh, remove }) => {
       )}
     </Card>
   );
-};
-
-DomainCard.defaultProps = {
-  apex: '',
-  cname: '',
-  isLoading: true,
-  name: '',
-  refresh: () => {},
-  remove: () => {},
-  slug: '',
 };
 
 export default DomainCard;

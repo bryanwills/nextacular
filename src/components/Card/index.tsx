@@ -1,4 +1,31 @@
-const Card = ({ children, danger }) => {
+import type { ReactNode } from 'react';
+
+type CardProps = {
+  children: ReactNode;
+  danger?: boolean;
+};
+
+type CardBodyProps = {
+  children?: ReactNode;
+  subtitle?: ReactNode;
+  title?: ReactNode;
+};
+
+type CardEmptyProps = {
+  children: ReactNode;
+};
+
+type CardFooterProps = {
+  children: ReactNode;
+};
+
+type CardComponent = ((props: CardProps) => JSX.Element) & {
+  Body: (props: CardBodyProps) => JSX.Element;
+  Empty: (props: CardEmptyProps) => JSX.Element;
+  Footer: (props: CardFooterProps) => JSX.Element;
+};
+
+const Card = (({ children, danger }: CardProps) => {
   return danger ? (
     <div className="flex flex-col justify-between border-2 border-red-600 rounded">
       {children}
@@ -8,9 +35,9 @@ const Card = ({ children, danger }) => {
       {children}
     </div>
   );
-};
+}) as CardComponent;
 
-Card.Body = ({ children, subtitle, title }) => {
+Card.Body = ({ children, subtitle, title }: CardBodyProps) => {
   return (
     <div className="flex flex-col p-5 space-y-3 overflow-auto">
       {title ? (
@@ -24,7 +51,7 @@ Card.Body = ({ children, subtitle, title }) => {
   );
 };
 
-Card.Empty = ({ children }) => {
+Card.Empty = ({ children }: CardEmptyProps) => {
   return (
     <div>
       <div className="flex items-center justify-center p-5 bg-gray-100 border-4 border-dashed rounded dark:bg-transparent dark:border-gray-600">
@@ -34,16 +61,12 @@ Card.Empty = ({ children }) => {
   );
 };
 
-Card.Footer = ({ children }) => {
+Card.Footer = ({ children }: CardFooterProps) => {
   return (
     <div className="flex flex-row items-center justify-between px-5 py-3 space-x-5 bg-gray-100 border-t rounded-b dark:border-t-gray-600 dark:bg-gray-900">
       {children}
     </div>
   );
 };
-
-Card.Body.displayName = 'Body';
-Card.Empty.displayName = 'Empty';
-Card.Footer.displayName = 'Footer';
 
 export default Card;

@@ -1,9 +1,21 @@
-import Item from './item';
 import { useTranslation } from 'react-i18next';
 
-const Menu = ({ data, isLoading, showMenu }) => {
+import type { SidebarMenuSection } from '@/config/menu/sidebar-static';
+
+import Item from './item';
+
+type MenuProps = {
+  data: SidebarMenuSection;
+  isLoading?: boolean;
+  showMenu?: boolean;
+};
+
+const Menu = ({ data, isLoading = false, showMenu = false }: MenuProps) => {
   const { t } = useTranslation();
-  return showMenu ? (
+
+  if (!showMenu) return null;
+
+  return (
     <div className="space-y-2">
       <h5 className="text-sm font-bold text-gray-400">{t(data.name)}</h5>
       <ul className="ml-5 leading-10">
@@ -12,12 +24,7 @@ const Menu = ({ data, isLoading, showMenu }) => {
         ))}
       </ul>
     </div>
-  ) : null;
-};
-
-Menu.defaultProps = {
-  isLoading: false,
-  showMenu: false,
+  );
 };
 
 export default Menu;
