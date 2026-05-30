@@ -2,13 +2,13 @@ import { html, text } from '@/config/email-templates/email-update';
 import { sendMail } from '@/lib/server/mail';
 import prisma from '@/prisma/index';
 
-export const deactivate = async (id) =>
+export const deactivate = async (id: string) =>
   await prisma.user.update({
     data: { deletedAt: new Date() },
     where: { id },
   });
 
-export const getUser = async (id) =>
+export const getUser = async (id: string) =>
   await prisma.user.findUnique({
     select: {
       email: true,
@@ -18,7 +18,11 @@ export const getUser = async (id) =>
     where: { id },
   });
 
-export const updateEmail = async (id, email, previousEmail) => {
+export const updateEmail = async (
+  id: string,
+  email: string,
+  previousEmail: string
+): Promise<void> => {
   await prisma.user.update({
     data: {
       email,
@@ -34,7 +38,7 @@ export const updateEmail = async (id, email, previousEmail) => {
   });
 };
 
-export const updateName = async (id, name) =>
+export const updateName = async (id: string, name: string) =>
   await prisma.user.update({
     data: { name },
     where: { id },
