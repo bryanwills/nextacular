@@ -1,7 +1,7 @@
-import { buffer } from 'micro';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type Stripe from 'stripe';
 
+import { readRawBody } from '@/lib/server/raw-body';
 import stripe from '@/lib/server/stripe';
 import prisma from '@/prisma/index';
 import { updateSubscription } from '@/prisma/services/customer';
@@ -11,7 +11,7 @@ import type { SubscriptionType } from '@prisma/client';
 export const config = { api: { bodyParser: false } };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const reqBuffer = await buffer(req);
+  const reqBuffer = await readRawBody(req);
   const signature = req.headers['stripe-signature'];
 
   if (!signature || Array.isArray(signature)) {
