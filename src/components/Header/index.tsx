@@ -1,18 +1,18 @@
-import { Fragment } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import {
   ArrowRightOnRectangleIcon,
   CogIcon,
-  CreditCardIcon,
   ComputerDesktopIcon,
+  CreditCardIcon,
   MoonIcon,
   SunIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
+import { Fragment, type MouseEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Header = () => {
   const { data } = useSession();
@@ -27,7 +27,7 @@ const Header = () => {
     }
   };
 
-  const toggleTheme = (event) => {
+  const toggleTheme = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };

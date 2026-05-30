@@ -1,8 +1,15 @@
-import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Fragment, type ReactNode } from 'react';
 
-const Modal = ({ children, show, title, toggle }) => {
+type ModalProps = {
+  children: ReactNode;
+  show?: boolean;
+  title?: ReactNode;
+  toggle: () => void;
+};
+
+const Modal = ({ children, show = false, title = '', toggle }: ModalProps) => {
   return (
     <Transition appear as={Fragment} show={show}>
       <Dialog
@@ -50,13 +57,6 @@ const Modal = ({ children, show, title, toggle }) => {
       </Dialog>
     </Transition>
   );
-};
-
-Modal.defaultProps = {
-  show: false,
-  subtitle: '',
-  title: '',
-  toggle: null,
 };
 
 export default Modal;

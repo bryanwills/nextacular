@@ -1,4 +1,3 @@
-import { Fragment, useState } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import {
   CheckIcon,
@@ -6,14 +5,19 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/router';
+import { Fragment, useState, type ChangeEvent, type MouseEvent } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/Button/index';
 import Modal from '@/components/Modal/index';
 import { useWorkspaces } from '@/hooks/data/index';
-import api from '@/lib/common/api';
-import { useWorkspace } from '@/providers/workspace';
-import { useTranslation } from 'react-i18next';
+import apiFetch from '@/lib/common/api';
+import { useWorkspace, type Workspace } from '@/providers/workspace';
+
+type CreateWorkspaceResponse = {
+  errors?: Record<string, { msg: string }>;
+};
 
 const Actions = () => {
   const { t } = useTranslation();
@@ -24,11 +28,12 @@ const Actions = () => {
   const [name, setName] = useState('');
   const [showModal, setModalState] = useState(false);
   const validName = name.length > 0 && name.length <= 16;
+  const workspaces = (data?.workspaces as Workspace[] | undefined) ?? [];
 
-  const createWorkspace = (event) => {
+  const createWorkspace = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setSubmittingState(true);
-    api('/api/workspace', {
+    apiFetch<CreateWorkspaceResponse>('/api/workspace', {
       body: { name },
       method: 'POST',
     }).then((response) => {
@@ -36,7 +41,7 @@ const Actions = () => {
 
       if (response.errors) {
         Object.keys(response.errors).forEach((error) =>
-          toast.error(response.errors[error].msg)
+          toast.error(response.errors?.[error]?.msg ?? 'Unknown error')
         );
       } else {
         toggleModal();
@@ -46,11 +51,12 @@ const Actions = () => {
     });
   };
 
-  const handleNameChange = (event) => setName(event.target.value);
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) =>
+    setName(event.target.value);
 
-  const handleWorkspaceChange = (workspace) => {
-    setWorkspace(workspace);
-    router.replace(`/account/${workspace?.slug}`);
+  const handleWorkspaceChange = (next: Workspace | null) => {
+    setWorkspace(next);
+    router.replace(`/account/${next?.slug}`);
   };
 
   const toggleModal = () => setModalState(!showModal);
@@ -100,7 +106,7 @@ const Actions = () => {
             <span className="block text-gray-600 truncate">
               {isLoading
                 ? 'Fetching workspaces...'
-                : data?.workspaces.length === 0
+                : workspaces.length === 0
                   ? t('workspace.message.notfound')
                   : workspace === null
                     ? t('workspace.action.label.select')
@@ -113,7 +119,7 @@ const Actions = () => {
               />
             </span>
           </Listbox.Button>
-          {data?.workspaces.length > 0 && (
+          {workspaces.length > 0 && (
             <Transition
               as={Fragment}
               leave="transition ease-in duration-100"
@@ -121,14 +127,14 @@ const Actions = () => {
               leaveTo="opacity-0"
             >
               <Listbox.Options className="absolute w-full py-1 mt-1 overflow-auto text-base bg-white rounded-md shadow-lg max-h-60">
-                {data?.workspaces.map((workspace, index) => (
+                {workspaces.map((option, index) => (
                   <Listbox.Option
                     key={index}
                     className={({ active }) =>
                       `${active ? 'text-blue-800 bg-blue-200' : 'text-gray-800'}
                           cursor-pointer select-none relative py-2 pl-10 pr-4`
                     }
-                    value={workspace}
+                    value={option}
                   >
                     {({ selected, active }) => (
                       <>
@@ -137,7 +143,7 @@ const Actions = () => {
                             selected ? 'font-bold' : 'font-normal'
                           } block truncate`}
                         >
-                          {workspace.name}
+                          {option.name}
                         </span>
                         {selected ? (
                           <span

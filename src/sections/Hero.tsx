@@ -1,15 +1,15 @@
-import { useState } from 'react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const Hero = () => {
   const { status: sessionStatus } = useSession();
   const [showMenu, setMenuVisibility] = useState(false);
+  const { t } = useTranslation();
 
   const toggleMenu = () => setMenuVisibility(!showMenu);
-  const { t } = useTranslation();
 
   return (
     <div className="w-full py-10">

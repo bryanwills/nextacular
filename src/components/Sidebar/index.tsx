@@ -1,39 +1,44 @@
-import { useState } from 'react';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import { useState } from 'react';
+
+import sidebarMenu, {
+  type SidebarMenuSection,
+} from '@/config/menu/sidebar-static';
+import { useWorkspaces } from '@/hooks/data';
+import { useWorkspace } from '@/providers/workspace';
 
 import Actions from './actions';
 import Menu from './menu';
-import sidebarMenu from '@/config/menu/sidebar-static';
-import { useWorkspaces } from '@/hooks/data';
-import { useWorkspace } from '@/providers/workspace';
-import { Bars3Icon } from '@heroicons/react/24/outline';
 
 const staticMenu = sidebarMenu();
 
-const Sidebar = ({ menu }) => {
+type SidebarProps = {
+  menu: SidebarMenuSection[];
+};
+
+const Sidebar = ({ menu }: SidebarProps) => {
   const [showMenu, setMenuVisibility] = useState(false);
   const { data, isLoading } = useWorkspaces();
   const { workspace } = useWorkspace();
+  const workspaceCount = data?.workspaces?.length ?? 0;
 
   const renderMenu = () => {
-    return (
-      workspace &&
-      menu.map((item, index) => (
-        <Menu
-          key={index}
-          data={item}
-          isLoading={isLoading}
-          showMenu={data?.workspaces.length > 0 || isLoading}
-        />
-      ))
-    );
-  };
-
-  const renderStaticMenu = () => {
-    return staticMenu.map((item, index) => (
-      <Menu key={index} data={item} showMenu={true} />
+    if (!workspace) return null;
+    return menu.map((item, index) => (
+      <Menu
+        key={index}
+        data={item}
+        isLoading={isLoading}
+        showMenu={workspaceCount > 0 || isLoading}
+      />
     ));
   };
+
+  const renderStaticMenu = () =>
+    staticMenu.map((item, index) => (
+      <Menu key={index} data={item} showMenu={true} />
+    ));
 
   const toggleMenu = () => setMenuVisibility(!showMenu);
 
