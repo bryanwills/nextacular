@@ -1,4 +1,4 @@
-import { InvitationStatus, TeamRole } from '@prisma/client';
+import { InvitationStatus, TeamRole, type Workspace } from '@prisma/client';
 import slugify from 'slugify';
 
 import {
@@ -12,12 +12,22 @@ import {
 import { sendMail } from '@/lib/server/mail';
 import prisma from '@/prisma/index';
 
-export const countWorkspaces = async (slug) =>
+export type WorkspaceMemberInvite = {
+  email: string;
+  role: TeamRole;
+};
+
+export const countWorkspaces = async (slug: string): Promise<number> =>
   await prisma.workspace.count({
     where: { slug: { startsWith: slug } },
   });
 
-export const createWorkspace = async (creatorId, email, name, slug) => {
+export const createWorkspace = async (
+  creatorId: string,
+  email: string,
+  name: string,
+  slug: string
+): Promise<void> => {
   const count = await countWorkspaces(slug);
 
   if (count > 0) {
@@ -47,7 +57,11 @@ export const createWorkspace = async (creatorId, email, name, slug) => {
   });
 };
 
-export const deleteWorkspace = async (id, email, slug) => {
+export const deleteWorkspace = async (
+  id: string,
+  email: string,
+  slug: string
+): Promise<string> => {
   const workspace = await getOwnWorkspace(id, email, slug);
 
   if (workspace) {
@@ -61,7 +75,7 @@ export const deleteWorkspace = async (id, email, slug) => {
   }
 };
 
-export const getInvitation = async (inviteCode) =>
+export const getInvitation = async (inviteCode: string) =>
   await prisma.workspace.findFirst({
     select: {
       id: true,
@@ -75,7 +89,11 @@ export const getInvitation = async (inviteCode) =>
     },
   });
 
-export const getOwnWorkspace = async (id, email, slug) =>
+export const getOwnWorkspace = async (
+  id: string,
+  email: string,
+  slug: string
+) =>
   await prisma.workspace.findFirst({
     select: {
       id: true,
@@ -102,7 +120,7 @@ export const getOwnWorkspace = async (id, email, slug) =>
     },
   });
 
-export const getSiteWorkspace = async (slug, customDomain) =>
+export const getSiteWorkspace = async (slug: string, customDomain: boolean) =>
   await prisma.workspace.findFirst({
     select: {
       id: true,
@@ -113,22 +131,24 @@ export const getSiteWorkspace = async (slug, customDomain) =>
     where: {
       OR: [
         { slug },
-        customDomain
-          ? {
-              domains: {
-                some: {
-                  name: slug,
-                  deletedAt: null,
+        ...(customDomain
+          ? [
+              {
+                domains: {
+                  some: {
+                    name: slug,
+                    deletedAt: null,
+                  },
                 },
               },
-            }
-          : undefined,
+            ]
+          : []),
       ],
       AND: { deletedAt: null },
     },
   });
 
-export const getWorkspace = async (id, email, slug) =>
+export const getWorkspace = async (id: string, email: string, slug: string) =>
   await prisma.workspace.findFirst({
     select: {
       creatorId: true,
@@ -163,7 +183,7 @@ export const getWorkspace = async (id, email, slug) =>
     },
   });
 
-export const getWorkspaces = async (id, email) =>
+export const getWorkspaces = async (id: string, email: string) =>
   await prisma.workspace.findMany({
     select: {
       createdAt: true,
@@ -230,7 +250,12 @@ export const getWorkspacePaths = async () => {
   ];
 };
 
-export const inviteUsers = async (id, email, members, slug) => {
+export const inviteUsers = async (
+  id: string,
+  email: string,
+  members: WorkspaceMemberInvite[],
+  slug: string
+): Promise<Array<{ email: string; inviter: string; teamRole: TeamRole }>> => {
   const workspace = await getOwnWorkspace(id, email, slug);
   const inviter = email;
 
@@ -273,22 +298,28 @@ export const inviteUsers = async (id, email, members, slug) => {
   }
 };
 
-export const isWorkspaceCreator = (id, creatorId) => id === creatorId;
+export const isWorkspaceCreator = (id: string, creatorId: string): boolean =>
+  id === creatorId;
 
-export const isWorkspaceOwner = (email, workspace) => {
-  let isTeamOwner = false;
+type WorkspaceWithMembers = Pick<Workspace, never> & {
+  members: Array<{ email: string; teamRole: TeamRole }>;
+};
+
+export const isWorkspaceOwner = (
+  email: string,
+  workspace: WorkspaceWithMembers
+): boolean => {
   const member = workspace.members.find(
     (member) => member.email === email && member.teamRole === TeamRole.OWNER
   );
 
-  if (member) {
-    isTeamOwner = true;
-  }
-
-  return isTeamOwner;
+  return Boolean(member);
 };
 
-export const joinWorkspace = async (workspaceCode, email) => {
+export const joinWorkspace = async (
+  workspaceCode: string,
+  email: string
+): Promise<Date> => {
   const workspace = await prisma.workspace.findFirst({
     select: {
       creatorId: true,
@@ -309,7 +340,9 @@ export const joinWorkspace = async (workspaceCode, email) => {
         status: InvitationStatus.ACCEPTED,
       },
       update: {},
-      where: { email },
+      where: {
+        workspaceId_email: { workspaceId: workspace.id, email },
+      },
     });
     return new Date();
   } else {
@@ -317,7 +350,12 @@ export const joinWorkspace = async (workspaceCode, email) => {
   }
 };
 
-export const updateName = async (id, email, name, slug) => {
+export const updateName = async (
+  id: string,
+  email: string,
+  name: string,
+  slug: string
+): Promise<string> => {
   const workspace = await getOwnWorkspace(id, email, slug);
 
   if (workspace) {
@@ -331,7 +369,12 @@ export const updateName = async (id, email, name, slug) => {
   }
 };
 
-export const updateSlug = async (id, email, newSlug, pathSlug) => {
+export const updateSlug = async (
+  id: string,
+  email: string,
+  newSlug: string,
+  pathSlug: string
+): Promise<string> => {
   let slug = slugify(newSlug.toLowerCase());
   const count = await countWorkspaces(slug);
 

@@ -1,33 +1,41 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import type { NextAuthOptions } from 'next-auth';
 import EmailProvider from 'next-auth/providers/email';
 
-import prisma from '@/prisma/index';
 import { html, text } from '@/config/email-templates/signin';
 import { emailConfig, sendMail } from '@/lib/server/mail';
+import prisma from '@/prisma/index';
 import { createPaymentAccount, getPayment } from '@/prisma/services/customer';
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   callbacks: {
     session: async ({ session, user }) => {
-      if (session.user) {
+      if (session.user && user.email) {
         const customerPayment = await getPayment(user.email);
-        session.user.userId = user.id;
+        (session.user as { userId?: string }).userId = user.id;
 
         if (customerPayment) {
-          session.user.subscription = customerPayment.subscriptionType;
+          (session.user as { subscription?: string }).subscription =
+            customerPayment.subscriptionType;
         }
       }
 
       return session;
     },
   },
-  debug: !(process.env.NODE_ENV === 'production'),
+  debug: process.env.NODE_ENV !== 'production',
   events: {
     signIn: async ({ user, isNewUser }) => {
+      if (!user.email) return;
+
       const customerPayment = await getPayment(user.email);
 
-      if (isNewUser || customerPayment === null || user.createdAt === null) {
+      if (
+        isNewUser ||
+        customerPayment === null ||
+        (user as { createdAt?: Date | null }).createdAt === null
+      ) {
         await Promise.all([createPaymentAccount(user.email, user.id)]);
       }
     },
@@ -47,8 +55,8 @@ export const authOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET || null,
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
-    jwt: true,
+    strategy: 'jwt',
   },
 };
