@@ -2,7 +2,6 @@ import { DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import type { GetServerSideProps } from 'next';
 import { getSession, signOut } from 'next-auth/react';
 import { useState, type ChangeEvent, type MouseEvent } from 'react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import isEmail from 'validator/lib/isEmail';
@@ -13,6 +12,7 @@ import Content from '@/components/Content/index';
 import Meta from '@/components/Meta/index';
 import Modal from '@/components/Modal/index';
 import { AccountLayout } from '@/layouts/index';
+import { copyToClipboard } from '@/lib/client/clipboard';
 import apiFetch from '@/lib/common/api';
 import { getUser } from '@/prisma/services/user';
 
@@ -42,7 +42,14 @@ const Settings = ({ user }: SettingsProps) => {
   const { t } = useTranslation();
   const verifiedEmail = verifyEmail === email;
 
-  const copyToClipboard = () => toast.success('Copied to clipboard!');
+  const handleCopyUserCode = async () => {
+    try {
+      await copyToClipboard(userCode);
+      toast.success('Copied to clipboard!');
+    } catch {
+      toast.error('Could not copy to clipboard');
+    }
+  };
 
   const changeName = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -190,9 +197,13 @@ const Settings = ({ user }: SettingsProps) => {
           >
             <div className="flex items-center justify-between px-3 py-2 space-x-5 font-mono text-sm border rounded md:w-1/2">
               <span className="overflow-x-auto">{userCode}</span>
-              <CopyToClipboard onCopy={copyToClipboard} text={userCode}>
+              <button
+                type="button"
+                aria-label="Copy user code"
+                onClick={handleCopyUserCode}
+              >
                 <DocumentDuplicateIcon className="w-5 h-5 cursor-pointer hover:text-blue-600" />
-              </CopyToClipboard>
+              </button>
             </div>
           </Card.Body>
         </Card>

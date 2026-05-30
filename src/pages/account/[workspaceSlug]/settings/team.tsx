@@ -10,7 +10,6 @@ import { InvitationStatus, TeamRole } from '@prisma/client';
 import type { GetServerSideProps } from 'next';
 import { getSession } from 'next-auth/react';
 import { Fragment, useState, type ChangeEvent } from 'react';
-import CopyToClipboard from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import isEmail from 'validator/lib/isEmail';
@@ -21,6 +20,7 @@ import Content from '@/components/Content/index';
 import Meta from '@/components/Meta/index';
 import { useMembers } from '@/hooks/data';
 import { AccountLayout } from '@/layouts/index';
+import { copyToClipboard } from '@/lib/client/clipboard';
 import apiFetch from '@/lib/common/api';
 import { getWorkspace, isWorkspaceOwner } from '@/prisma/services/workspace';
 
@@ -89,7 +89,14 @@ const Team = ({ isTeamOwner, workspace }: TeamProps) => {
     });
   };
 
-  const copyToClipboard = () => toast.success('Copied to clipboard!');
+  const handleCopyInviteLink = async () => {
+    try {
+      await copyToClipboard(workspace.inviteLink);
+      toast.success('Copied to clipboard!');
+    } catch {
+      toast.error('Could not copy to clipboard');
+    }
+  };
 
   const handleEmailChange = (
     event: ChangeEvent<HTMLInputElement>,
@@ -169,12 +176,13 @@ const Team = ({ isTeamOwner, workspace }: TeamProps) => {
           >
             <div className="flex items-center justify-between px-3 py-2 space-x-5 font-mono text-sm border rounded">
               <span className="overflow-x-auto">{workspace.inviteLink}</span>
-              <CopyToClipboard
-                onCopy={copyToClipboard}
-                text={workspace.inviteLink}
+              <button
+                type="button"
+                aria-label="Copy invite link"
+                onClick={handleCopyInviteLink}
               >
                 <DocumentDuplicateIcon className="w-5 h-5 cursor-pointer hover:text-blue-600" />
-              </CopyToClipboard>
+              </button>
             </div>
           </Card.Body>
         </Card>

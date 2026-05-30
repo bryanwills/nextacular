@@ -3,7 +3,6 @@ import type { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { getSession } from 'next-auth/react';
 import { useEffect, useState, type ChangeEvent, type MouseEvent } from 'react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import isAlphanumeric from 'validator/lib/isAlphanumeric';
@@ -14,6 +13,7 @@ import Card from '@/components/Card/index';
 import Content from '@/components/Content/index';
 import Meta from '@/components/Meta/index';
 import { AccountLayout } from '@/layouts/index';
+import { copyToClipboard } from '@/lib/client/clipboard';
 import apiFetch from '@/lib/common/api';
 import { useWorkspace, type Workspace } from '@/providers/workspace';
 import { getWorkspace, isWorkspaceOwner } from '@/prisma/services/workspace';
@@ -95,7 +95,14 @@ const General = ({ isTeamOwner, workspace }: GeneralProps) => {
     });
   };
 
-  const copyToClipboard = () => toast.success('Copied to clipboard!');
+  const handleCopyWorkspaceCode = async () => {
+    try {
+      await copyToClipboard(String(workspace.workspaceCode));
+      toast.success('Copied to clipboard!');
+    } catch {
+      toast.error('Could not copy to clipboard');
+    }
+  };
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) =>
     setName(event.target.value);
@@ -180,12 +187,13 @@ const General = ({ isTeamOwner, workspace }: GeneralProps) => {
               <span className="overflow-x-auto">
                 {String(workspace.workspaceCode)}
               </span>
-              <CopyToClipboard
-                onCopy={copyToClipboard}
-                text={String(workspace.workspaceCode)}
+              <button
+                type="button"
+                aria-label="Copy workspace code"
+                onClick={handleCopyWorkspaceCode}
               >
                 <DocumentDuplicateIcon className="w-5 h-5 cursor-pointer hover:text-blue-600" />
-              </CopyToClipboard>
+              </button>
             </div>
           </Card.Body>
         </Card>
